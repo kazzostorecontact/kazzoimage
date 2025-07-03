@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>KazzoGhost Metadata Tool</title>
+<link rel="icon" href="icon.png">
+<style>
+  body {
+    background: #121212;
+    color: #e0e0e0;
+    font-family: Arial, sans-serif;
+    max-width: 900px;
+    margin: 30px auto;
+    padding: 0 20px;
+  }
+  h1 {
+    color: #00ffea;
+    text-align: center;
+    letter-spacing: 2px;
+  }
+  form {
+    margin-bottom: 30px;
+    text-align: center;
+  }
+  input[type="file"] {
+    padding: 10px;
+    border-radius: 5px;
+    border: none;
+    background: #222;
+    color: #eee;
+  }
+  button {
+    padding: 10px 20px;
+    margin-left: 10px;
+    border-radius: 5px;
+    border: none;
+    background: #00ffea;
+    color: #121212;
+    font-weight: bold;
+    cursor: pointer;
+  }
+  button:hover {
+    background: #00c1b9;
+  }
+  .container {
+    background: #1e1e1e;
+    border-radius: 10px;
+    padding: 20px;
+    margin-bottom: 30px;
+  }
+  h2 {
+    color: #00ffea;
+    margin-bottom: 15px;
+  }
+  ul {
+    list-style: none;
+    padding-left: 15px;
+  }
+  li {
+    margin-bottom: 8px;
+  }
+  .nested {
+    margin-left: 20px;
+    border-left: 2px solid #00ffea;
+    padding-left: 10px;
+  }
+  .toggle-btn {
+    cursor: pointer;
+    user-select: none;
+    color: #00ffea;
+    font-weight: 600;
+  }
+  .file-formats {
+    text-align: center;
+  }
+  .file-formats span {
+    background: #00ffea;
+    color: #121212;
+    font-weight: bold;
+    padding: 5px 10px;
+    border-radius: 15px;
+    margin: 5px;
+    display: inline-block;
+  }
+  a.download-btn {
+    display: inline-block;
+    background: #00ffea;
+    color: #121212;
+    padding: 10px 25px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: bold;
+  }
+  a.download-btn:hover {
+    background: #00c1b9;
+  }
+</style>
+</head>
+<body>
+<h1>KazzoGhost Metadata Tool</h1>
+
+<div class="file-formats container">
+  <h2>Supported File Formats</h2>
+  <p>
+    Images: 
+    {% for ext in supported_formats["Images"] %}
+      <span>{{ ext.upper() }}</span>
+    {% endfor %}
+  </p>
+  <p>
+    Documents: 
+    {% for ext in supported_formats["Documents"] %}
+      <span>{{ ext.upper() }}</span>
+    {% endfor %}
+  </p>
+</div>
+
+<form method="post" enctype="multipart/form-data">
+  <input type="file" name="file" required />
+  <button type="submit">Upload & Analyze</button>
+</form>
+
+{% if metadata %}
+  {% for category, data in metadata.items() %}
+    <div class="container">
+      <h2>{{ category }}</h2>
+      {% if data == None %}
+        <p>No metadata found.</p>
+      {% elif data == "Binary data hidden" %}
+        <p>Metadata contains hidden binary data.</p>
+      {% elif data == "Unsupported file format." %}
+        <p style="color:#ff5555;">Unsupported file format.</p>
+      {% else %}
+        <ul>
+          {% macro render_meta(data) %}
+            {% for key, value in data.items() %}
+              <li>
+                {% if value is mapping %}
+                  <span class="toggle-btn" onclick="toggleNested(this)">▶ {{ key }}</span>
+                  <ul class="nested" style="display:none;">
+                    {{ render_meta(value) }}
+                  </ul>
+                {% elif value is iterable and value is not string %}
+                  <span class="toggle-btn" onclick="toggleNested(this)">▶ {{ key }}</span>
+                  <ul class="nested" style="display:none;">
+                    {% for item in value %}
+                      <li>{{ item }}</li>
+                    {% endfor %}
+                  </ul>
+                {% else %}
+                  <strong>{{ key }}:</strong> {{ value }}
+                {% endif %}
+              </li>
+            {% endfor %}
+          {% endmacro %}
+          {{ render_meta(data) }}
+        </ul>
+      {% endif %}
+    </div>
+  {% endfor %}
+{% endif %}
+
+{% if cleaned_file and file_type == "image" and download_key %}
+  <div class="container" style="text-align:center;">
+    <a href="{{ url_for('download', key=download_key) }}" class="download-btn">Download Cleaned Image</a>
+  </div>
+{% endif %}
+
+<script>
+  function toggleNested(el) {
+    const nested = el.nextElementSibling;
+    if (nested.style.display === "none") {
+      nested.style.display = "block";
+      el.textContent = el.textContent.replace('▶', '▼');
+    } else {
+      nested.style.display = "none";
+      el.textContent = el.textContent.replace('▼', '▶');
+    }
+  }
+</script>
+</body>
+</html>
