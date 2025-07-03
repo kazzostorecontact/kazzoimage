@@ -1,0 +1,25 @@
+body {
+    background-color: #121212;
+    color: #e0e0e0;
+    font-family: monospace, monospace;
+    padding: 20px;
+    max-width: 600px;
+    margin: auto;
+}
+
+h1, h2 {
+    color: #00ffea;
+}
+
+button {
+    background-color: #00ffea;
+    border: none;
+    padding: 10px 20px;
+    color: #121212;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #00ccbe;
+}
